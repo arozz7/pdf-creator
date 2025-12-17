@@ -24,6 +24,11 @@ __pycache__
 .DS_Store
 Thumbs.db
 
+# PyInstaller
+python/build/
+python/dist/
+*.spec
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

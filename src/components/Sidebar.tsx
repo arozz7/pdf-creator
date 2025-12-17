@@ -13,7 +13,7 @@ export function Sidebar() {
     return (
         <div className="w-64 h-screen bg-card text-card-foreground border-r border-border p-4 flex flex-col">
             <div className="flex items-center gap-3 mb-8 px-4">
-                <img src="/logo.png?v=transp" alt="PDF Creator Logo" className="w-10 h-10 object-contain" />
+                <img src="./logo.png?v=transp" alt="PDF Creator Logo" className="w-10 h-10 object-contain" />
                 <h1 className="text-2xl font-bold">
                     <span className="text-primary">PDF</span> Creator
                 </h1>
@@ -38,7 +38,7 @@ export function Sidebar() {
                 ))}
             </nav>
             <div className="text-xs text-muted-foreground p-4 text-center">
-                v0.1.0-alpha
+                v0.1.3
             </div>
         </div>
     );

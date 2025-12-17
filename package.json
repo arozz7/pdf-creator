@@ -2,7 +2,8 @@
   "name": "pdf-creator",
   "productName": "PDF Creator",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.3",
+  "author": "Jesus Arozamena",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
@@ -10,6 +11,7 @@
     "dev:electron": "wait-on http://localhost:3000 && tsc -p tsconfig.electron.json && electron .",
     "build": "tsc -b && vite build && npm run build:electron",
     "build:electron": "tsc -p tsconfig.electron.json",
+    "dist": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -45,5 +47,30 @@
     "typescript-eslint": "^8.46.4",
     "vite": "^5.4.0",
     "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.arozz7.pdfcreator",
+    "productName": "PDF Creator",
+    "icon": "public/logo.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "python/dist/pdf_backend.exe",
+        "to": "python/pdf_backend.exe"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
   }
 }

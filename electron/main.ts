@@ -19,18 +19,21 @@ let mainWindow: BrowserWindow | null = null;
 let pythonProcess: any = null;
 
 function createWindow() {
+    const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+    const iconPath = isDev
+        ? path.join(__dirname, '../public/logo.png')
+        : path.join(__dirname, '../dist/logo.png');
+
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        icon: path.join(__dirname, '../public/logo.png'),
+        icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
         },
     });
-
-    const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
     if (isDev) {
         mainWindow.loadURL('http://localhost:3000');
@@ -55,18 +58,21 @@ app.whenReady().then(() => {
 
 function startPythonSubprocess() {
     const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-    // In dev, use the venv python.
-    const pythonPath = isDev
-        ? path.join(__dirname, '../.venv/Scripts/python.exe')
-        : 'path/to/bundled/python';
 
-    const scriptPath = isDev
-        ? path.join(__dirname, '../python/main.py')
-        : path.join(process.resourcesPath, 'python/main.py');
+    let executablePath: string;
+    let args: string[] = [];
 
-    console.log(`Starting python process from: ${pythonPath}`);
+    if (isDev) {
+        executablePath = path.join(__dirname, '../.venv/Scripts/python.exe');
+        args = [path.join(__dirname, '../python/main.py')];
+    } else {
+        executablePath = path.join(process.resourcesPath, 'python/pdf_backend.exe');
+        args = [];
+    }
 
-    pythonProcess = spawn(pythonPath, [scriptPath], {
+    console.log(`Starting python process from: ${executablePath}`);
+
+    pythonProcess = spawn(executablePath, args, {
         env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
     });
 
