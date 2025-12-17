@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F172A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E293B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Shape: Document -->
+  <rect x="96" y="32" width="320" height="448" rx="32" ry="32" fill="url(#grad1)" />
+  
+  <!-- Folded Corner Effect (Subtle) -->
+  <path d="M 320 32 L 416 128 L 416 448 A 32 32 0 0 1 384 480 L 128 480 A 32 32 0 0 1 96 448 L 96 64 A 32 32 0 0 1 128 32 L 320 32 Z" fill="url(#grad1)" opacity="0.9" />
+  
+  <!-- Accent Design: 'P' or Abstract PDF Symbol -->
+  <!-- Stylized geometric shape representing a document/page being processed -->
+  <rect x="160" y="160" width="192" height="32" rx="8" fill="#FFFFFF" />
+  <rect x="160" y="224" width="192" height="32" rx="8" fill="#FFFFFF" opacity="0.7" />
+  <rect x="160" y="288" width="128" height="32" rx="8" fill="#FFFFFF" opacity="0.4" />
+  
+  <!-- Simple Badge/Action Accent -->
+  <circle cx="360" cy="400" r="48" fill="url(#grad2)" />
+  <path d="M 360 384 L 360 416 M 344 400 L 376 400" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" />
+</svg>
