@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Files, Scissors, Shrink, Home } from "lucide-react";
+import { Files, Scissors, Shrink, Home, PenLine } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export function Sidebar() {
@@ -8,6 +8,7 @@ export function Sidebar() {
         { to: "/merge", icon: Files, label: "Merge PDF" },
         { to: "/extract", icon: Scissors, label: "Extract Pages" },
         { to: "/compress", icon: Shrink, label: "Compress PDF" },
+        { to: "/edit", icon: PenLine, label: "Edit PDF" },
     ];
 
     return (
@@ -38,7 +39,7 @@ export function Sidebar() {
                 ))}
             </nav>
             <div className="text-xs text-muted-foreground p-4 text-center">
-                v0.1.3
+                v0.2.0
             </div>
         </div>
     );

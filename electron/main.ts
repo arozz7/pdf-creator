@@ -100,6 +100,32 @@ app.on('window-all-closed', () => {
 
 import { dialog } from 'electron';
 
+// Sends a JSON command to the Python subprocess and buffers the response,
+// handling cases where large payloads arrive in multiple chunks.
+function sendPythonCommand(command: object): Promise<any> {
+    return new Promise((resolve) => {
+        if (!pythonProcess) {
+            resolve({ status: 'error', message: 'Python process not running' });
+            return;
+        }
+
+        let buffer = '';
+        const listener = (data: any) => {
+            buffer += data.toString();
+            try {
+                const response = JSON.parse(buffer);
+                pythonProcess.stdout.removeListener('data', listener);
+                resolve(response);
+            } catch {
+                // Incomplete JSON — keep buffering
+            }
+        };
+
+        pythonProcess.stdout.on('data', listener);
+        pythonProcess.stdin.write(JSON.stringify(command) + '\n');
+    });
+}
+
 // IPC Handlers
 ipcMain.handle('ping', () => 'pong');
 
@@ -108,110 +134,36 @@ ipcMain.handle('dialog:openFile', async () => {
         properties: ['openFile', 'multiSelections'],
         filters: [{ name: 'PDFs', extensions: ['pdf'] }]
     });
-    if (canceled) {
-        return [];
-    } else {
-        return filePaths;
-    }
+    return canceled ? [] : filePaths;
 });
 
 ipcMain.handle('dialog:saveFile', async () => {
     const { canceled, filePath } = await dialog.showSaveDialog({
         filters: [{ name: 'PDFs', extensions: ['pdf'] }]
     });
-    if (canceled) {
-        return null;
-    } else {
-        return filePath;
-    }
+    return canceled ? null : filePath;
 });
 
 ipcMain.handle('pdf:merge', async (event, files: string[], outputPath: string) => {
-    return new Promise((resolve) => {
-        if (!pythonProcess) {
-            resolve({ status: 'error', message: 'Python process not running' });
-            return;
-        }
-
-        const command = {
-            type: 'merge',
-            files: files,
-            output: outputPath
-        };
-
-        // Simple request/response via stdio for now. 
-        // NOTE: In a real app we need a way to correlate responses to requests (e.g. IDs).
-        // For this single-threaded demo, we'll just listen for the next data event.
-        // A better approach below.
-
-        const listener = (data: any) => {
-            try {
-                const response = JSON.parse(data.toString());
-                resolve(response);
-            } catch (e) {
-                resolve({ status: 'error', message: 'Invalid response from Python' });
-            }
-            pythonProcess.stdout.removeListener('data', listener);
-        };
-
-        pythonProcess.stdout.on('data', listener);
-        pythonProcess.stdin.write(JSON.stringify(command) + '\n');
-    });
+    return sendPythonCommand({ type: 'merge', files, output: outputPath });
 });
 
 ipcMain.handle('pdf:extract', async (event, file: string, pages: string, outputPath: string) => {
-    return new Promise((resolve) => {
-        if (!pythonProcess) {
-            resolve({ status: 'error', message: 'Python process not running' });
-            return;
-        }
-
-        const command = {
-            type: 'extract',
-            file: file,
-            pages: pages,
-            output: outputPath
-        };
-
-        const listener = (data: any) => {
-            try {
-                const response = JSON.parse(data.toString());
-                resolve(response);
-            } catch (e) {
-                resolve({ status: 'error', message: 'Invalid response from Python' });
-            }
-            pythonProcess.stdout.removeListener('data', listener);
-        };
-
-        pythonProcess.stdout.on('data', listener);
-        pythonProcess.stdin.write(JSON.stringify(command) + '\n');
-    });
+    return sendPythonCommand({ type: 'extract', file, pages, output: outputPath });
 });
 
 ipcMain.handle('pdf:compress', async (event, file: string, outputPath: string) => {
-    return new Promise((resolve) => {
-        if (!pythonProcess) {
-            resolve({ status: 'error', message: 'Python process not running' });
-            return;
-        }
+    return sendPythonCommand({ type: 'compress', file, output: outputPath });
+});
 
-        const command = {
-            type: 'compress',
-            file: file,
-            output: outputPath
-        };
+ipcMain.handle('pdf:getPages', async (event, file: string) => {
+    return sendPythonCommand({ type: 'get_pages', file });
+});
 
-        const listener = (data: any) => {
-            try {
-                const response = JSON.parse(data.toString());
-                resolve(response);
-            } catch (e) {
-                resolve({ status: 'error', message: 'Invalid response from Python' });
-            }
-            pythonProcess.stdout.removeListener('data', listener);
-        };
+ipcMain.handle('pdf:getThumbnails', async (event, file: string) => {
+    return sendPythonCommand({ type: 'get_thumbnails', file });
+});
 
-        pythonProcess.stdout.on('data', listener);
-        pythonProcess.stdin.write(JSON.stringify(command) + '\n');
-    });
+ipcMain.handle('pdf:edit', async (event, file: string, outputPath: string, edits: object[]) => {
+    return sendPythonCommand({ type: 'edit_pdf', file, output: outputPath, edits });
 });

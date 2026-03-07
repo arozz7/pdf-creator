@@ -4,6 +4,7 @@ import { Home } from "./pages/Home";
 import { Merge } from "./pages/Merge";
 import { Extract } from "./pages/Extract";
 import { Compress } from "./pages/Compress";
+import { Edit } from "./pages/Edit";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/merge" element={<Merge />} />
             <Route path="/extract" element={<Extract />} />
             <Route path="/compress" element={<Compress />} />
+            <Route path="/edit" element={<Edit />} />
           </Routes>
         </main>
       </div>
