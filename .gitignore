@@ -28,6 +28,7 @@ Thumbs.db
 python/build/
 python/dist/
 *.spec
+!python/pdf_backend.spec
 
 # Editor directories and files
 .vscode/*

@@ -3,6 +3,27 @@ import path from 'path';
 import { spawn } from 'child_process';
 import fs from 'fs';
 
+// --- File logger (visible in packaged builds) ---
+// Log path is resolved lazily after app is ready.
+let _logPath: string | null = null;
+
+function getLogPath(): string {
+    if (!_logPath) {
+        _logPath = path.join(app.getPath('userData'), 'pdf-creator.log');
+    }
+    return _logPath;
+}
+
+function log(level: 'INFO' | 'ERROR' | 'WARN', msg: string) {
+    const line = `[${new Date().toISOString()}] [${level}] ${msg}\n`;
+    process.stdout.write(line);
+    try {
+        fs.appendFileSync(getLogPath(), line);
+    } catch {
+        // ignore fs errors during logging
+    }
+}
+
 ipcMain.handle('pdf:readBuffer', async (event, filePath: string) => {
     try {
         const buffer = await fs.promises.readFile(filePath);
@@ -44,6 +65,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    log('INFO', `App ready. isPackaged=${app.isPackaged}, userData=${app.getPath('userData')}`);
     createWindow();
 
     app.on('activate', () => {
@@ -70,22 +92,35 @@ function startPythonSubprocess() {
         args = [];
     }
 
-    console.log(`Starting python process from: ${executablePath}`);
+    const exeExists = fs.existsSync(executablePath);
+    log('INFO', `Python executable path: ${executablePath}`);
+    log('INFO', `Python executable exists: ${exeExists}`);
+    log('INFO', `args: ${JSON.stringify(args)}`);
+    log('INFO', `resourcesPath: ${process.resourcesPath ?? 'N/A'}`);
+
+    if (!exeExists) {
+        log('ERROR', `Python executable NOT FOUND — all PDF operations will fail`);
+        return;
+    }
 
     pythonProcess = spawn(executablePath, args, {
         env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
     });
 
+    pythonProcess.on('error', (err: Error) => {
+        log('ERROR', `Failed to spawn Python process: ${err.message}`);
+    });
+
     pythonProcess.stdout.on('data', (data: any) => {
-        console.log(`Python stdout: ${data}`);
+        log('INFO', `Python stdout: ${data.toString().trimEnd()}`);
     });
 
     pythonProcess.stderr.on('data', (data: any) => {
-        console.error(`Python stderr: ${data}`);
+        log('ERROR', `Python stderr: ${data.toString().trimEnd()}`);
     });
 
     pythonProcess.on('close', (code: any) => {
-        console.log(`Python process exited with code ${code}`);
+        log(code === 0 ? 'INFO' : 'ERROR', `Python process exited with code ${code}`);
     });
 }
 
@@ -105,16 +140,19 @@ import { dialog } from 'electron';
 function sendPythonCommand(command: object): Promise<any> {
     return new Promise((resolve) => {
         if (!pythonProcess) {
+            log('ERROR', `sendPythonCommand: no Python process — command dropped: ${JSON.stringify(command)}`);
             resolve({ status: 'error', message: 'Python process not running' });
             return;
         }
 
+        log('INFO', `→ Python: ${JSON.stringify(command)}`);
         let buffer = '';
         const listener = (data: any) => {
             buffer += data.toString();
             try {
                 const response = JSON.parse(buffer);
                 pythonProcess.stdout.removeListener('data', listener);
+                log('INFO', `← Python: ${JSON.stringify(response).substring(0, 200)}`);
                 resolve(response);
             } catch {
                 // Incomplete JSON — keep buffering

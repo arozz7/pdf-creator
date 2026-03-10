@@ -11,7 +11,8 @@
     "dev:electron": "wait-on http://localhost:3000 && tsc -p tsconfig.electron.json && electron .",
     "build": "tsc -b && vite build && npm run build:electron",
     "build:electron": "tsc -p tsconfig.electron.json",
-    "dist": "npm run build && electron-builder",
+    "build:python": "powershell -ExecutionPolicy Bypass -NoProfile -Command \"Push-Location python; ../.venv/Scripts/pyinstaller pdf_backend.spec --clean; Pop-Location\"",
+    "dist": "npm run build:python && npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"
   },
